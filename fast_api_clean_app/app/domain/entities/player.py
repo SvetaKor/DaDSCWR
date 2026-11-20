@@ -39,7 +39,12 @@ class Player:
         if self.status != PlayerStatus.ACTIVE:
             raise PlayerInactiveError(f"Player {self.id} is not active")
 
-    def link_platform(self, platform: PlatformType, platform_user_id: str) -> PlatformLink:
+    def link_platform(
+        self,
+        platform: PlatformType,
+        platform_user_id: str,
+        metadata: dict | None = None,
+    ) -> PlatformLink:
         self.ensure_can_authenticate()
         if any(link.platform == platform for link in self.platform_links):
             raise PlatformAlreadyLinkedError(platform)
@@ -48,6 +53,7 @@ class Player:
             player_id=self.id,
             platform=platform,
             platform_user_id=platform_user_id,
+            metadata=metadata,
         )
         self.platform_links.append(link)
         self.updated_at = datetime.now(timezone.utc)

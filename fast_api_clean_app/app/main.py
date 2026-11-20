@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 from app.adapters.controllers.auth_controller import router as auth_router
 from app.domain.exceptions import (
     DomainError,
+    PlatformAlreadyLinkedError,
+    PlatformAlreadyLinkedToAnotherPlayerError,
     EmailAlreadyTakenError,
     InvalidCredentialsError,
     PlayerInactiveError,
@@ -27,6 +29,8 @@ app.include_router(auth_router)
 
 
 _STATUS_BY_ERROR = {
+    PlatformAlreadyLinkedError: 409,
+    PlatformAlreadyLinkedToAnotherPlayerError: 409,
     EmailAlreadyTakenError: 409,
     WeakPasswordError: 422,
     InvalidEmailError: 422,

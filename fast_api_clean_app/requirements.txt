@@ -13,3 +13,6 @@ pydantic-settings>=2.6,<3.0
 # --- Auth / security ---
 bcrypt>=4.2,<5.0
 PyJWT>=2.10,<3.0
+
+# --- Steam ---
+steam-openid>=1.0.6
