@@ -8,7 +8,7 @@ from app.domain.exceptions import EmailAlreadyTakenError
 from app.domain.repositories.unit_of_work import UnitOfWork
 from app.domain.services.password_hasher import PasswordHasher
 from app.domain.services.password_policy import PasswordPolicy
-from app.domain.services.token_service import TokenPair, TokenService
+from app.domain.services.token_service import TokenPair
 from app.domain.value_objects.email import Email
 
 
@@ -31,12 +31,10 @@ class RegisterUserUseCase:
         self,
         uow: UnitOfWork,
         hasher: PasswordHasher,
-        token_service: TokenService,
         password_policy: PasswordPolicy | None = None,
     ) -> None:
         self.uow = uow
         self.hasher = hasher
-        self.token_service = token_service
         self.password_policy = password_policy or PasswordPolicy()
 
     async def execute(self, command: RegisterUserCommand) -> RegisterUserResult:
@@ -70,12 +68,12 @@ class RegisterUserUseCase:
 
             # Токены выпускаются после commit, чтобы при ошибке транзакции клиент не получил "висячие" токены.
 
+            tokens = await self.uow.token_service.issue_pair(player.id)
+
             try:
                 await self.uow.commit()
             except IntegrityError as exc:
                 await self.uow.rollback()
                 raise EmailAlreadyTakenError(email.value) from exc
-
-            tokens = await self.token_service.issue_pair(player.id)
 
             return RegisterUserResult(player_id=str(player.id), tokens=tokens)

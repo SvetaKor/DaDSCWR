@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 
 from app.domain.entities.player import Player
-from app.domain.exceptions import PlayerInactiveError
 from app.domain.repositories.unit_of_work import UnitOfWork
-from app.domain.services.token_service import TokenPair, TokenService
+from app.domain.services.token_service import TokenPair
 from app.domain.value_objects.platform_type import PlatformType
 
 
@@ -20,9 +19,8 @@ class LoginWithSteamResult:
 
 
 class LoginWithSteamUseCase:
-    def __init__(self, uow: UnitOfWork, token_service: TokenService) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         self.uow = uow
-        self.token_service = token_service
 
     async def execute(self, command: LoginWithSteamCommand) -> LoginWithSteamResult:
         async with self.uow:
@@ -40,11 +38,7 @@ class LoginWithSteamUseCase:
                 # Повторный вход: проверяем, что аккаунт активен
                 player.ensure_can_authenticate()
 
-            tokens = await self.token_service.issue_pair(player.id)
+            tokens = await self.uow.token_service.issue_pair(player.id)
             await self.uow.commit()
 
-            return LoginWithSteamResult(
-                player_id=str(player.id),
-                tokens=tokens,
-            )
-        
+            return LoginWithSteamResult(player_id=str(player.id), tokens=tokens)

@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone 
 
 from sqlalchemy import (
-    String, DateTime, ForeignKey, Enum as SAEnum, UniqueConstraint,
+    String, DateTime, ForeignKey, UniqueConstraint,
     JSON, Index,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -30,6 +30,9 @@ class PlayerModel(Base):
     )
     credentials: Mapped[list["CredentialModel"]] = relationship(
         back_populates="player", cascade="all, delete-orphan", lazy="selectin"
+    )
+    refresh_tokens: Mapped[list["RefreshTokenModel"]] = relationship(
+        back_populates="player", cascade="all, delete-orphan"
     )
 
 
@@ -69,3 +72,35 @@ class CredentialModel(Base):
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     player: Mapped["PlayerModel"] = relationship(back_populates="credentials")
+
+class RefreshTokenModel(Base):
+    __tablename__ = "refresh_tokens"
+    __table_args__ = (
+        Index("ix_refresh_tokens_player", "player_id"),
+        Index("ix_refresh_tokens_family", "family_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("players.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    token_hash: Mapped[str] = mapped_column(
+        String(64), unique=True, nullable=False, index=True
+    )
+    family_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=False, index=True
+    )
+    used: Mapped[bool] = mapped_column(default=False, nullable=False)
+    revoked: Mapped[bool] = mapped_column(default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    player: Mapped["PlayerModel"] = relationship(back_populates="refresh_tokens")

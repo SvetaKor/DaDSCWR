@@ -2,7 +2,6 @@ from fastapi import Depends
 
 from app.adapters.repositories.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from app.adapters.services.bcrypt_password_hasher import BcryptPasswordHasher
-from app.adapters.services.jwt_token_service import JWTTokenService
 from app.adapters.services.steam_openid import SteamOpenIDAdapter
 from app.infrastructure.database import async_session_factory
 from app.config import Settings
@@ -16,8 +15,6 @@ from app.use_cases.login_with_steam import LoginWithSteamUseCase
 settings = Settings()
 
 _hasher = BcryptPasswordHasher()
-_token_service = JWTTokenService(settings)
-
 
 # --- Database ---
 def get_uow() -> SqlAlchemyUnitOfWork:
@@ -36,15 +33,15 @@ def get_steam_adapter() -> SteamOpenIDAdapter:
 
 # --- Use cases ---
 def get_register_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
-    return RegisterUserUseCase(uow, _hasher, _token_service)
+    return RegisterUserUseCase(uow, _hasher)
 
 
 def get_login_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
-    return AuthenticateWithPasswordUseCase(uow, _hasher, _token_service)
+    return AuthenticateWithPasswordUseCase(uow, _hasher)
 
 
 def get_login_with_steam_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
-    return LoginWithSteamUseCase(uow, _token_service)
+    return LoginWithSteamUseCase(uow)
 
 
 def get_link_platform_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):

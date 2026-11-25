@@ -8,6 +8,5 @@ class SteamOpenIDAdapter:
         return self._client.get_redirect_url()
 
     def validate_and_get_steam_id(self, query_params: dict) -> str | None:
-        # Метод называется validate_results и принимает query_params
         return self._client.validate_results(query_params)
     

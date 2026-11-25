@@ -6,6 +6,14 @@ from app.adapters.repositories.sqlalchemy_player_repository import (
 from app.adapters.repositories.sqlalchemy_credential_repository import (
     SqlAlchemyCredentialRepository,
 )
+from app.adapters.repositories.sqlalchemy_refresh_token_repository import (
+    SqlAlchemyRefreshTokenRepository,
+)
+from app.adapters.services.jwt_token_service import JWTTokenService
+from app.config import Settings
+
+
+settings = Settings()
 
 
 class SqlAlchemyUnitOfWork:
@@ -16,6 +24,8 @@ class SqlAlchemyUnitOfWork:
         self._session = self._session_factory()
         self.players = SqlAlchemyPlayerRepository(self._session)
         self.credentials = SqlAlchemyCredentialRepository(self._session)
+        self.refresh_tokens = SqlAlchemyRefreshTokenRepository(self._session)
+        self.token_service = JWTTokenService(settings, self.refresh_tokens)
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
