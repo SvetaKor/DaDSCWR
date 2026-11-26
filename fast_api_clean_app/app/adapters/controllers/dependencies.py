@@ -23,12 +23,19 @@ def get_uow() -> SqlAlchemyUnitOfWork:
 
 # --- Адаптеры ---
 
-# Singleton
-_steam_adapter = SteamOpenIDAdapter(realm=settings.steam_realm, return_to=settings.steam_return_url)
+# --- Steam ---
+_steam_adapter = SteamOpenIDAdapter(realm=settings.steam_realm, return_to=settings.steam_return_url) # Singleton
 
+_link_steam_adapter = SteamOpenIDAdapter(
+    realm=settings.steam_realm,
+    return_to="http://localhost:8000/auth/steam/link/callback",
+)
 
 def get_steam_adapter() -> SteamOpenIDAdapter:
     return _steam_adapter
+
+def get_link_steam_adapter() -> SteamOpenIDAdapter:
+    return _link_steam_adapter
 
 
 # --- Use cases ---

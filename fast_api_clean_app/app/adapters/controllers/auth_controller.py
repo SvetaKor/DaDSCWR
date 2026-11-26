@@ -1,5 +1,7 @@
 import hashlib
+import itsdangerous
 from datetime import datetime, timezone
+from uuid import UUID
 
 from app.adapters.controllers.schemas import (
     RegisterRequest, LoginRequest, RefreshRequest,
@@ -11,13 +13,14 @@ from app.adapters.controllers.dependencies import (
     get_link_platform_use_case,
     get_unlink_platform_use_case,
     get_steam_adapter,
+    get_link_steam_adapter,
     get_uow,
 )
 from app.adapters.repositories.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.use_cases.register_user import RegisterUserUseCase, RegisterUserCommand
 from app.use_cases.link_platform import LinkPlatformUseCase
@@ -25,7 +28,6 @@ from app.use_cases.unlink_platform import UnlinkPlatformUseCase
 from app.use_cases.authenticate_with_password import (
     AuthenticateWithPasswordUseCase, AuthenticateWithPasswordCommand,
 )
-from app.adapters.controllers.schemas import RegisterRequest, LoginRequest
 
 from app.adapters.controllers.auth_dependencies import get_current_player
 from app.adapters.services.steam_openid import SteamOpenIDAdapter
@@ -39,7 +41,11 @@ from app.domain.exceptions import (
     PlayerInactiveError, WeakPasswordError,
 )
 
+from app.config import Settings
+
 router = APIRouter(prefix="/auth", tags=["auth"])
+settings = Settings()
+_serializer = itsdangerous.URLSafeTimedSerializer(settings.jwt_secret)
 
 # --- Password ---
 
@@ -90,7 +96,13 @@ async def login(
 
 @router.get("/me")
 async def me(player: Player = Depends(get_current_player)):
-    return {...}
+    return {
+        "id": str(player.id),
+        "email": player.email,
+        "display_name": player.display_name,
+        "status": player.status.value,
+        "created_at": player.created_at.isoformat(),
+    }
 
 @router.get("/me/platforms")
 async def my_platforms(player: Player = Depends(get_current_player)):
@@ -137,6 +149,36 @@ async def steam_callback(
         "expires_in": result.tokens.expires_in,
     }
 
+@router.get("/steam/link")
+async def steam_link_initiate(
+    player: Player = Depends(get_current_player),
+    adapter: SteamOpenIDAdapter = Depends(get_link_steam_adapter),
+):
+    state = _serializer.dumps(str(player.id))
+    response = RedirectResponse(adapter.get_redirect_url())
+    response.set_cookie("steam_link_state", state, httponly=True, max_age=300)
+    return response
+
+@router.get("/steam/link/callback")
+async def steam_link_callback(
+    request: Request,
+    adapter: SteamOpenIDAdapter = Depends(get_link_steam_adapter),
+    use_case: LinkPlatformUseCase = Depends(get_link_platform_use_case),
+):
+    state = request.cookies.get("steam_link_state")
+    if not state:
+        raise HTTPException(400, "Missing link state")
+    try:
+        player_id = UUID(_serializer.loads(state, max_age=300))
+    except Exception:
+        raise HTTPException(400, "Invalid or expired state")
+
+    steam_id = adapter.validate_and_get_steam_id(request.query_params)
+    if not steam_id:
+        raise HTTPException(403, "Steam auth failed")
+
+    await use_case.execute(player_id, PlatformType.STEAM, steam_id)
+    return JSONResponse({"status": "linked", "steam_id": steam_id})
 
 # --- Refresh tokens ---
 
@@ -188,4 +230,3 @@ async def logout(
         await uow.token_service.revoke_refresh(body.refresh_token)
         await uow.commit()
     return {"status": "logged out"}
-
