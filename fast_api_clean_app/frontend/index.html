@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Account Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div id="auth-view" class="container">
+    <h1>Game Account Manager</h1>
+    <p class="subtitle">Управление игровым аккаунтом и привязка платформ</p>
+
+    <div class="card">
+        <h2>Вход</h2>
+        <input id="login-email" type="email" placeholder="Email">
+        <input id="login-password" type="password" placeholder="Пароль">
+        <button onclick="doLogin()">Войти</button>
+    </div>
+
+    <div class="card">
+        <h2>Регистрация</h2>
+        <input id="reg-email" type="email" placeholder="Email">
+        <input id="reg-password" type="password" placeholder="Пароль">
+        <input id="reg-name" type="text" placeholder="Отображаемое имя">
+        <button onclick="doRegister()">Создать аккаунт</button>
+    </div>
+
+    <div class="card">
+        <h2>Или</h2>
+        <button class="steam-btn" onclick="steamLogin()">Войти через Steam</button>
+    </div>
+
+    <p id="auth-error" class="error hidden"></p>
+</div>
+
+<div id="dashboard-view" class="container hidden">
+    <header>
+        <h1>Личный кабинет</h1>
+        <button class="ghost" onclick="doLogout()">Выйти</button>
+    </header>
+
+    <div class="card">
+        <h2>Профиль</h2>
+        <div id="profile-info" class="info-grid"></div>
+    </div>
+
+    <div class="card">
+        <h2>Привязанные платформы</h2>
+        <div id="platforms-list"></div>
+        <button class="steam-btn" onclick="linkSteam()">Привязать Steam</button>
+        <p class="hint">
+            Прогресс ниже привязан к вашему аккаунту, а не к способу входа.
+            Войдите через Steam после привязки — увидите тот же счётчик.
+        </p>
+    </div>
+
+    <div class="card clicker-card">
+        <h2>Кликер</h2>
+        <p class="hint">
+            Это универсальное поле состояния — сюда можно записать любые параметры игры (уровень, инвентарь, достижения). 
+            Кликер — лишь демонстрация.
+        </p>
+        <div class="clicker">
+            <button id="click-btn" onclick="doClick()">Клик!</button>
+            <div class="counter">Кликов: <span id="click-count">0</span></div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

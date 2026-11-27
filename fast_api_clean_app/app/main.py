@@ -1,9 +1,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.adapters.controllers.auth_controller import router as auth_router
+from app.config import settings
 from app.domain.exceptions import (
     DomainError,
     PlatformAlreadyLinkedError,
@@ -26,6 +30,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
+
+
+app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret)
+
+
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+@app.get("/")
+async def index():
+    return FileResponse("frontend/index.html")
 
 
 _STATUS_BY_ERROR = {

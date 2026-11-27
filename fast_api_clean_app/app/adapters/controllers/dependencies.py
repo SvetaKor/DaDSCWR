@@ -1,8 +1,8 @@
 from fastapi import Depends
+from fastapi_steam import SteamAuth
 
 from app.adapters.repositories.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from app.adapters.services.bcrypt_password_hasher import BcryptPasswordHasher
-from app.adapters.services.steam_openid import SteamOpenIDAdapter
 from app.infrastructure.database import async_session_factory
 from app.config import Settings
 from app.use_cases.register_user import RegisterUserUseCase
@@ -10,9 +10,10 @@ from app.use_cases.link_platform import LinkPlatformUseCase
 from app.use_cases.unlink_platform import UnlinkPlatformUseCase
 from app.use_cases.authenticate_with_password import AuthenticateWithPasswordUseCase
 from app.use_cases.login_with_steam import LoginWithSteamUseCase
-
-
-settings = Settings()
+from app.use_cases.game_state import (
+    GetGameStateUseCase, UpdateGameStateUseCase, IncrementCounterUseCase,
+)
+from app.config import settings
 
 _hasher = BcryptPasswordHasher()
 
@@ -24,18 +25,21 @@ def get_uow() -> SqlAlchemyUnitOfWork:
 # --- Адаптеры ---
 
 # --- Steam ---
-_steam_adapter = SteamOpenIDAdapter(realm=settings.steam_realm, return_to=settings.steam_return_url) # Singleton
-
-_link_steam_adapter = SteamOpenIDAdapter(
-    realm=settings.steam_realm,
-    return_to="http://localhost:8000/auth/steam/link/callback",
+_steam_auth_login = SteamAuth(
+    api_key="",
+    redirect_uri=settings.steam_return_url,
 )
 
-def get_steam_adapter() -> SteamOpenIDAdapter:
-    return _steam_adapter
+_steam_auth_link = SteamAuth(
+    api_key="",
+    redirect_uri="http://localhost:8000/auth/steam/link/callback",
+)
 
-def get_link_steam_adapter() -> SteamOpenIDAdapter:
-    return _link_steam_adapter
+def get_steam_auth_login() -> SteamAuth:
+    return _steam_auth_login
+
+def get_steam_auth_link() -> SteamAuth:
+    return _steam_auth_link
 
 
 # --- Use cases ---
@@ -57,3 +61,13 @@ def get_link_platform_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
 
 def get_unlink_platform_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
     return UnlinkPlatformUseCase(uow)
+
+
+def get_game_state_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
+    return GetGameStateUseCase(uow)
+
+def get_update_game_state_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
+    return UpdateGameStateUseCase(uow)
+
+def get_increment_counter_use_case(uow: SqlAlchemyUnitOfWork = Depends(get_uow)):
+    return IncrementCounterUseCase(uow)

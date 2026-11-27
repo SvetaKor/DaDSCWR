@@ -4,13 +4,13 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.config import Settings
+from app.config import settings
 from app.domain.entities.player import Player
 from app.domain.exceptions import PlayerNotFoundError
 from app.adapters.controllers.dependencies import get_uow
 from app.adapters.repositories.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
-settings = Settings()
+
 _bearer = HTTPBearer(auto_error=False)
 
 

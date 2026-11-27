@@ -16,4 +16,4 @@ PyJWT>=2.10,<3.0
 itsdangerous>=2.2,<3.0
 
 # --- Steam ---
-steam-openid>=1.0.6
+fastapi-steam[fastapi]>=0.1.0

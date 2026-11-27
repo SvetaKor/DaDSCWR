@@ -27,6 +27,7 @@ def to_player_entity(model: PlayerModel) -> Player:
             )
             for link in model.platform_links
         ],
+        game_state=dict(model.game_state or {}),
     )
 
 
@@ -58,6 +59,7 @@ def to_player_model(entity: Player, model: PlayerModel | None = None) -> PlayerM
                     link_metadata=link.metadata,
                 )
             )
+    model.game_state = entity.game_state
     return model
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from enum import Enum
+from typing import Any
 
 from app.domain.entities.platform_link import PlatformLink
 from app.domain.value_objects.platform_type import PlatformType
@@ -27,6 +28,8 @@ class Player:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     platform_links: list[PlatformLink] = field(default_factory=list)
+
+    game_state: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def create(cls, display_name: str, email: str | None = None) -> "Player":
@@ -76,3 +79,19 @@ class Player:
 
     def has_platform(self, platform: PlatformType) -> bool:
         return any(link.platform == platform for link in self.platform_links)
+
+
+    def update_game_state(self, new_state: dict[str, Any]) -> None:
+        if not isinstance(new_state, dict):
+            raise ValueError("game_state must be a dict")
+        self.game_state = dict(new_state)
+        self.updated_at = datetime.now(timezone.utc)
+
+    def increment_counter(self, key: str, delta: int = 1) -> None:
+        if delta <= 0:
+            raise ValueError("delta must be positive")
+        current = self.game_state.get(key, 0)
+        if not isinstance(current, int):
+            raise ValueError(f"counter '{key}' is not an int")
+        self.game_state[key] = current + delta
+        self.updated_at = datetime.now(timezone.utc)

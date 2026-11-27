@@ -25,6 +25,10 @@ class PlayerModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
+    game_state: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict, server_default="{}",
+    )
+
     platform_links: Mapped[list["PlatformLinkModel"]] = relationship(
         back_populates="player", cascade="all, delete-orphan", lazy="selectin"
     )
