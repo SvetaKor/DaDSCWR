@@ -31,7 +31,7 @@ _steam_auth_login = SteamAuth(
 )
 
 _steam_auth_link = SteamAuth(
-    api_key="",
+    api_key=settings.steam_api_key,
     redirect_uri="http://localhost:8000/auth/steam/link/callback",
 )
 
