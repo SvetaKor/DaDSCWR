@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # Steam
     steam_realm: str = "http://localhost:8000"
     steam_return_url: str = "http://localhost:8000/auth/steam/callback"
-    steam_api_key: str = "9FCD0895F2BECF337B0BF4590155AA05"
+    steam_api_key: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

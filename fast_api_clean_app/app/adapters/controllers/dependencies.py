@@ -26,7 +26,7 @@ def get_uow() -> SqlAlchemyUnitOfWork:
 
 # --- Steam ---
 _steam_auth_login = SteamAuth(
-    api_key="",
+    api_key=settings.steam_api_key,
     redirect_uri=settings.steam_return_url,
 )
 
